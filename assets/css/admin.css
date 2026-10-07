@@ -1,0 +1,97 @@
+/**
+ * External API Page Content - settings screen styles.
+ *
+ * @package External_API_Page_Content
+ */
+
+.eapc-mapping {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	margin: 0 0 16px;
+	padding: 16px;
+	max-width: 1050px;
+}
+
+.eapc-mapping__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 12px;
+}
+
+.eapc-mapping__header h2 {
+	margin: 0;
+}
+
+.eapc-mapping__grid {
+	display: grid;
+	grid-template-columns: minmax(180px, 1fr) minmax(260px, 2fr);
+	gap: 14px 22px;
+}
+
+.eapc-mapping__grid label {
+	font-weight: 600;
+}
+
+.eapc-mapping__grid input[type="text"],
+.eapc-mapping__grid input[type="url"],
+.eapc-mapping__grid select,
+.eapc-mapping__grid textarea.eapc-request-headers {
+	width: 100%;
+	max-width: 560px;
+}
+
+.eapc-mapping__grid input.small-text {
+	width: 100px;
+}
+
+.eapc-mapping__description {
+	color: #646970;
+	margin: 4px 0 0;
+}
+
+.eapc-test-controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.eapc-test-controls .spinner {
+	float: none;
+	margin: 0;
+}
+
+.eapc-test-result {
+	grid-column: 1 / -1;
+	background: #f6f7f7;
+	border-left: 4px solid #2271b1;
+	padding: 12px;
+}
+
+.eapc-test-result.eapc-test-result--error {
+	border-left-color: #d63638;
+}
+
+.eapc-test-result__meta {
+	margin: 0 0 8px;
+	font-weight: 600;
+}
+
+.eapc-test-payload {
+	min-height: 260px;
+	resize: vertical;
+	white-space: pre;
+	overflow: auto;
+}
+
+@media (max-width: 782px) {
+	.eapc-mapping__grid {
+		grid-template-columns: 1fr;
+		gap: 6px;
+	}
+
+	.eapc-test-result {
+		grid-column: auto;
+	}
+}

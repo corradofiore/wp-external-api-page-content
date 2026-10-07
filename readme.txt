@@ -1,9 +1,12 @@
 === External API Page Content ===
-Tags: api, markdown, html, remote content
+Contributors: corradofiore
+Tags: api, markdown, html, content, remote
 Requires at least: 5.8
+Tested up to: 7.1
 Requires PHP: 7.4
 Stable tag: 1.3.0
 License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Replace the content body of configured WordPress pages with raw HTML or Markdown fetched from external HTTP APIs.
 
@@ -142,6 +145,46 @@ Changes rendered/sanitized Markdown HTML.
 `eapc_rendered_content`
 Changes the final HTML before caching/output. Receives the stable mapping ID and full mapping.
 
+== Frequently Asked Questions ==
+
+= What happens when the external API is unavailable? =
+
+The last successful response for that mapping is served instead. If the API has never returned a usable response, the normal WordPress page content is shown unchanged.
+
+= Where are Bearer tokens stored? =
+
+Token values are never written to the database. Define a constant in wp-config.php and enter only the constant name in the mapping. Request headers typed into the mapping form are stored in the site options table, so use constants for secrets.
+
+= Does this plugin send data to the plugin author? =
+
+No. Requests go only to the API URLs you configure yourself.
+
+= Can several pages use the same API? =
+
+Yes. Every mapping is independent and keeps its own cache TTL, request headers and payload format.
+
+= Which Markdown features are supported? =
+
+Headings, paragraphs, blockquotes, horizontal rules, fenced code blocks, ordered and unordered lists, links, inline code, bold, emphasis and strikethrough. Tables and nested lists are not supported; see the Markdown support section above.
+
+= Does it work on multisite? =
+
+Settings are stored per site. After a network activation, configure each site through Settings -> External API Content.
+
+== External requests and privacy ==
+
+This plugin does not send any data to the plugin author or to WordPress.org.
+
+For every enabled mapping, the plugin performs a server-side HTTP request to the exact URL entered on the settings screen and replaces the body of the mapped page with the response. You choose those endpoints, so review the privacy policy and terms of use of each API you connect before enabling a mapping.
+
+Requests use the WordPress HTTP API (`wp_safe_remote_get`) and accept only public HTTP/HTTPS URLs. Redirects are limited to 3, the response body is capped at 2 MB and the request times out after 8 seconds.
+
+== Source code and support ==
+
+Development happens at https://github.com/corradofiore/wp-external-api-page-content
+
+Bug reports and feature requests are welcome there. The distributed plugin contains the same unminified source as the repository, so no build step is required to review the code.
+
 == Changelog ==
 
 = 1.3.0 =
@@ -164,3 +207,8 @@ Changes the final HTML before caching/output. Receives the stable mapping ID and
 
 = 1.0.0 =
 * Initial release.
+
+== Upgrade Notice ==
+
+= 1.3.0 =
+Adds per-mapping HTTP request headers. Existing 1.1 and 1.2 settings are migrated automatically.

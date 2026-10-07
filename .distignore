@@ -1,0 +1,16 @@
+# Files and folders excluded from the distributed plugin archive.
+# Consumed by bin/build-zip.sh; also understood by `wp dist-archive`.
+/.git
+/.github
+/.gitignore
+/.distignore
+/.editorconfig
+/.vscode
+/.wp-env.json
+/.DS_Store
+/phpcs.xml.dist
+/composer.json
+/composer.lock
+/node_modules
+/bin
+/build

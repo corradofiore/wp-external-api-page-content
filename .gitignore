@@ -1,1 +1,11 @@
 .DS_Store
+
+# Development tooling (per-developer, contains machine-specific details)
+.vscode/
+
+# Build output
+/build/
+
+# Dependency folders
+/node_modules/
+/vendor/

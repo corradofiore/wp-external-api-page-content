@@ -1,11 +1,18 @@
 <?php
 /**
  * Plugin Name: External API Page Content
+ * Plugin URI: https://github.com/corradofiore/wp-external-api-page-content
  * Description: Replaces the body of configured WordPress pages with raw HTML or Markdown retrieved from external HTTP APIs.
  * Version: 1.3.0
- * Author: Custom
- * License: GPL-2.0-or-later
- * Text Domain: external-api-page-content
+ * Requires at least: 5.8
+ * Requires PHP: 7.4
+ * Author: Corrado Fiore
+ * Author URI: https://corradofiore.it
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: wp-external-api-page-content
+ *
+ * @package External_API_Page_Content
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -15,11 +22,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/includes/class-eapc-markdown.php';
 
 final class EAPC_Plugin {
-    const OPTION_SETTINGS   = 'eapc_settings';
-    const OPTION_GENERATION = 'eapc_cache_generation';
-    const SETTINGS_GROUP    = 'eapc_settings_group';
-    const SETTINGS_PAGE     = 'eapc-settings';
-    const DEFAULT_CACHE_TTL = 3600;
+    const VERSION                = '1.3.0';
+    const OPTION_SETTINGS        = 'eapc_settings';
+    const OPTION_GENERATION      = 'eapc_cache_generation';
+    const OPTION_TRANSIENT_INDEX = 'eapc_transient_index';
+    const SETTINGS_GROUP         = 'eapc_settings_group';
+    const SETTINGS_PAGE          = 'eapc-settings';
+    const DEFAULT_CACHE_TTL      = 3600;
 
     private static $instance = null;
 
@@ -36,6 +45,7 @@ final class EAPC_Plugin {
         add_action( 'admin_menu', array( $this, 'register_settings_page' ) );
         add_action( 'admin_init', array( $this, 'register_settings' ) );
         add_action( 'admin_post_eapc_clear_cache', array( $this, 'handle_clear_cache' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
         add_action( 'wp_ajax_eapc_test_mapping', array( $this, 'handle_test_mapping' ) );
         add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'add_settings_link' ) );
     }
@@ -57,14 +67,44 @@ final class EAPC_Plugin {
 
     public function add_settings_link( $links ) {
         $url = admin_url( 'options-general.php?page=' . self::SETTINGS_PAGE );
-        array_unshift( $links, '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'external-api-page-content' ) . '</a>' );
+        array_unshift( $links, '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'wp-external-api-page-content' ) . '</a>' );
         return $links;
+    }
+
+    public function enqueue_admin_assets( $hook_suffix ) {
+        if ( 'settings_page_' . self::SETTINGS_PAGE !== $hook_suffix ) {
+            return;
+        }
+
+        $base_url = plugin_dir_url( __FILE__ );
+
+        wp_enqueue_style( 'eapc-admin', $base_url . 'assets/css/admin.css', array(), self::VERSION );
+        wp_enqueue_script( 'eapc-admin', $base_url . 'assets/js/admin.js', array(), self::VERSION, true );
+
+        $settings = $this->get_settings();
+
+        wp_localize_script(
+            'eapc-admin',
+            'eapcAdmin',
+            array(
+                'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+                'nonce'     => wp_create_nonce( 'eapc_test_mapping' ),
+                'nextIndex' => count( $settings['mappings'] ),
+                'i18n'      => array(
+                    'enterUrl'      => __( 'Enter an API URL before testing.', 'wp-external-api-page-content' ),
+                    'testFailed'    => __( 'API test failed.', 'wp-external-api-page-content' ),
+                    'requestFailed' => __( 'The API test request could not be completed.', 'wp-external-api-page-content' ),
+                    'noContentType' => __( 'Content-Type not provided', 'wp-external-api-page-content' ),
+                    'interpretedAs' => __( 'interpreted as', 'wp-external-api-page-content' ),
+                ),
+            )
+        );
     }
 
     public function register_settings_page() {
         add_options_page(
-            __( 'External API Page Content', 'external-api-page-content' ),
-            __( 'External API Content', 'external-api-page-content' ),
+            __( 'External API Page Content', 'wp-external-api-page-content' ),
+            __( 'External API Content', 'wp-external-api-page-content' ),
             'manage_options',
             self::SETTINGS_PAGE,
             array( $this, 'render_settings_page' )
@@ -113,7 +153,7 @@ final class EAPC_Plugin {
                         'eapc_invalid_url_' . absint( $row_index ),
                         sprintf(
                             /* translators: %d: mapping row number */
-                            __( 'Mapping %d has an invalid public HTTP/HTTPS API URL.', 'external-api-page-content' ),
+                            __( 'Mapping %d has an invalid public HTTP/HTTPS API URL.', 'wp-external-api-page-content' ),
                             absint( $row_index ) + 1
                         )
                     );
@@ -127,7 +167,7 @@ final class EAPC_Plugin {
                     'eapc_duplicate_page_' . $page_id,
                     sprintf(
                         /* translators: %d: WordPress page ID */
-                        __( 'Page ID %d is mapped more than once. Only the first mapping was saved.', 'external-api-page-content' ),
+                        __( 'Page ID %d is mapped more than once. Only the first mapping was saved.', 'wp-external-api-page-content' ),
                         $page_id
                     )
                 );
@@ -153,7 +193,7 @@ final class EAPC_Plugin {
                     'eapc_invalid_constant_' . absint( $row_index ),
                     sprintf(
                         /* translators: %d: mapping row number */
-                        __( 'Mapping %d has an invalid Bearer token constant name. It was cleared.', 'external-api-page-content' ),
+                        __( 'Mapping %d has an invalid Bearer token constant name. It was cleared.', 'wp-external-api-page-content' ),
                         absint( $row_index ) + 1
                     )
                 );
@@ -374,6 +414,7 @@ final class EAPC_Plugin {
 
         if ( $ttl > 0 ) {
             set_transient( $cache_key, $rendered, $ttl );
+            $this->remember_transient_key( $cache_key );
         }
 
         update_option(
@@ -467,7 +508,7 @@ final class EAPC_Plugin {
                         'Mapping %1$d contained %2$d malformed request-header line; it was ignored.',
                         'Mapping %1$d contained %2$d malformed request-header lines; they were ignored.',
                         $invalid,
-                        'external-api-page-content'
+                        'wp-external-api-page-content'
                     ),
                     absint( $row_index ) + 1,
                     $invalid
@@ -576,12 +617,8 @@ final class EAPC_Plugin {
         global $wpdb;
 
         $like = $wpdb->esc_like( 'eapc_last_good_' ) . '%';
-        $wpdb->query(
-            $wpdb->prepare(
-                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
-                $like
-            )
-        ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bulk cleanup of plugin-owned rows; there is no cache to invalidate.
+        $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $like ) );
     }
 
     private function resolve_format( $configured, $content_type, $body ) {
@@ -630,6 +667,7 @@ final class EAPC_Plugin {
 
     private function log_error( $error, $mapping, $page_id ) {
         if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only diagnostics, gated by WP_DEBUG.
             error_log(
                 sprintf(
                     '[External API Page Content] page=%d mapping=%s url=%s error=%s',
@@ -643,32 +681,70 @@ final class EAPC_Plugin {
     }
 
     private function bump_cache_generation() {
+        // Drop the previous generation's transients so they cannot leak in wp_options.
+        $this->flush_indexed_transients();
+
         $generation = max( 1, (int) get_option( self::OPTION_GENERATION, 1 ) );
         update_option( self::OPTION_GENERATION, $generation + 1, false );
     }
 
+    /**
+     * Records a cache transient so it can be removed when settings change.
+     *
+     * @param string $cache_key Transient key.
+     */
+    private function remember_transient_key( $cache_key ) {
+        $index = $this->get_transient_index();
+
+        if ( ! isset( $index[ $cache_key ] ) ) {
+            $index[ $cache_key ] = time();
+            update_option( self::OPTION_TRANSIENT_INDEX, $index, false );
+        }
+    }
+
+    private function get_transient_index() {
+        $index = get_option( self::OPTION_TRANSIENT_INDEX, array() );
+
+        return is_array( $index ) ? $index : array();
+    }
+
+    private function flush_indexed_transients() {
+        $index = $this->get_transient_index();
+
+        if ( empty( $index ) ) {
+            return;
+        }
+
+        foreach ( array_keys( $index ) as $cache_key ) {
+            delete_transient( $cache_key );
+        }
+
+        delete_option( self::OPTION_TRANSIENT_INDEX );
+    }
+
     public function handle_test_mapping() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( array( 'message' => __( 'You do not have permission to test API mappings.', 'external-api-page-content' ) ), 403 );
+            wp_send_json_error( array( 'message' => __( 'You do not have permission to test API mappings.', 'wp-external-api-page-content' ) ), 403 );
         }
 
         check_ajax_referer( 'eapc_test_mapping', 'nonce' );
 
-        $api_url = isset( $_POST['api_url'] ) ? trim( (string) wp_unslash( $_POST['api_url'] ) ) : '';
-        $api_url = esc_url_raw( $api_url, array( 'http', 'https' ) );
+        $api_url = isset( $_POST['api_url'] ) ? sanitize_text_field( wp_unslash( $_POST['api_url'] ) ) : '';
+        $api_url = esc_url_raw( trim( $api_url ), array( 'http', 'https' ) );
 
         if ( ! $api_url || ! wp_http_validate_url( $api_url ) ) {
-            wp_send_json_error( array( 'message' => __( 'Enter a valid public HTTP/HTTPS API URL before testing.', 'external-api-page-content' ) ), 400 );
+            wp_send_json_error( array( 'message' => __( 'Enter a valid public HTTP/HTTPS API URL before testing.', 'wp-external-api-page-content' ) ), 400 );
         }
 
         $format = isset( $_POST['format'] ) ? strtolower( sanitize_text_field( wp_unslash( $_POST['format'] ) ) ) : 'auto';
         $format = in_array( $format, array( 'auto', 'html', 'markdown' ), true ) ? $format : 'auto';
 
-        $headers = isset( $_POST['headers'] ) ? $this->sanitize_headers_text( wp_unslash( $_POST['headers'] ) ) : '';
+        $headers = isset( $_POST['headers'] ) ? sanitize_textarea_field( wp_unslash( $_POST['headers'] ) ) : '';
+        $headers = $this->sanitize_headers_text( $headers );
 
         $bearer_constant = isset( $_POST['bearer_constant'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['bearer_constant'] ) ) ) : '';
         if ( '' !== $bearer_constant && ! preg_match( '/^[A-Za-z_][A-Za-z0-9_]*$/', $bearer_constant ) ) {
-            wp_send_json_error( array( 'message' => __( 'The Bearer token constant name is invalid.', 'external-api-page-content' ) ), 400 );
+            wp_send_json_error( array( 'message' => __( 'The Bearer token constant name is invalid.', 'wp-external-api-page-content' ) ), 400 );
         }
 
         $mapping = array(
@@ -721,7 +797,7 @@ final class EAPC_Plugin {
 
     public function handle_clear_cache() {
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( esc_html__( 'You do not have permission to do that.', 'external-api-page-content' ) );
+            wp_die( esc_html__( 'You do not have permission to do that.', 'wp-external-api-page-content' ) );
         }
 
         check_admin_referer( 'eapc_clear_cache' );
@@ -751,13 +827,13 @@ final class EAPC_Plugin {
         $mappings = $settings['mappings'];
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e( 'External API Page Content', 'external-api-page-content' ); ?></h1>
+            <h1><?php esc_html_e( 'External API Page Content', 'wp-external-api-page-content' ); ?></h1>
 
             <?php if ( isset( $_GET['eapc_cache_cleared'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-                <div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'External content cache cleared.', 'external-api-page-content' ); ?></p></div>
+                <div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'External content cache cleared.', 'wp-external-api-page-content' ); ?></p></div>
             <?php endif; ?>
 
-            <p><?php esc_html_e( 'Add any number of page-to-API mappings. Each enabled mapping replaces the selected WordPress page body with the raw HTML or Markdown returned by its endpoint.', 'external-api-page-content' ); ?></p>
+            <p><?php esc_html_e( 'Add any number of page-to-API mappings. Each enabled mapping replaces the selected WordPress page body with the raw HTML or Markdown returned by its endpoint.', 'wp-external-api-page-content' ); ?></p>
 
             <form method="post" action="options.php">
                 <?php settings_fields( self::SETTINGS_GROUP ); ?>
@@ -769,7 +845,7 @@ final class EAPC_Plugin {
                 </div>
 
                 <p>
-                    <button type="button" class="button" id="eapc-add-mapping"><?php esc_html_e( 'Add mapping', 'external-api-page-content' ); ?></button>
+                    <button type="button" class="button" id="eapc-add-mapping"><?php esc_html_e( 'Add mapping', 'wp-external-api-page-content' ); ?></button>
                 </p>
 
                 <?php submit_button(); ?>
@@ -794,185 +870,49 @@ final class EAPC_Plugin {
                 ?>
             </script>
 
-            <style>
-                .eapc-mapping { background: #fff; border: 1px solid #c3c4c7; margin: 0 0 16px; padding: 16px; max-width: 1050px; }
-                .eapc-mapping__header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
-                .eapc-mapping__header h2 { margin: 0; }
-                .eapc-mapping__grid { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(260px, 2fr); gap: 14px 22px; }
-                .eapc-mapping__grid label { font-weight: 600; }
-                .eapc-mapping__grid input[type="text"], .eapc-mapping__grid input[type="url"], .eapc-mapping__grid select, .eapc-mapping__grid textarea.eapc-request-headers { width: 100%; max-width: 560px; }
-                .eapc-mapping__grid input.small-text { width: 100px; }
-                .eapc-mapping__description { color: #646970; margin: 4px 0 0; }
-                .eapc-test-controls { display: flex; align-items: center; gap: 8px; }
-                .eapc-test-controls .spinner { float: none; margin: 0; }
-                .eapc-test-result { grid-column: 1 / -1; background: #f6f7f7; border-left: 4px solid #2271b1; padding: 12px; }
-                .eapc-test-result.eapc-test-result--error { border-left-color: #d63638; }
-                .eapc-test-result__meta { margin: 0 0 8px; font-weight: 600; }
-                .eapc-test-payload { min-height: 260px; resize: vertical; white-space: pre; overflow: auto; }
-                @media (max-width: 782px) { .eapc-mapping__grid { grid-template-columns: 1fr; gap: 6px; } .eapc-test-result { grid-column: auto; } }
-            </style>
-
-            <script>
-                (function() {
-                    var container = document.getElementById('eapc-mappings');
-                    var addButton = document.getElementById('eapc-add-mapping');
-                    var template = document.getElementById('eapc-mapping-template');
-                    var nextIndex = <?php echo (int) count( $mappings ); ?>;
-                    var ajaxUrl = <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>;
-                    var testNonce = <?php echo wp_json_encode( wp_create_nonce( 'eapc_test_mapping' ) ); ?>;
-
-                    function mappingField(card, fieldName) {
-                        return card.querySelector('[name$="[' + fieldName + ']"]');
-                    }
-
-                    function formatBytes(bytes) {
-                        if (bytes < 1024) {
-                            return bytes + ' B';
-                        }
-                        if (bytes < 1024 * 1024) {
-                            return (bytes / 1024).toFixed(1) + ' KB';
-                        }
-                        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-                    }
-
-                    function showTestError(card, message) {
-                        var result = card.querySelector('.eapc-test-result');
-                        var meta = card.querySelector('.eapc-test-result__meta');
-                        var payload = card.querySelector('.eapc-test-payload');
-                        result.hidden = false;
-                        result.classList.add('eapc-test-result--error');
-                        meta.textContent = message;
-                        payload.value = '';
-                    }
-
-                    function testMapping(card, button) {
-                        var apiUrl = mappingField(card, 'api_url');
-                        var format = mappingField(card, 'format');
-                        var pageId = mappingField(card, 'page_id');
-                        var mappingId = mappingField(card, 'id');
-                        var label = mappingField(card, 'label');
-                        var cacheTtl = mappingField(card, 'cache_ttl');
-                        var requestHeaders = mappingField(card, 'headers');
-                        var bearerConstant = mappingField(card, 'bearer_constant');
-                        var spinner = card.querySelector('.eapc-test-spinner');
-                        var result = card.querySelector('.eapc-test-result');
-                        var meta = card.querySelector('.eapc-test-result__meta');
-                        var payload = card.querySelector('.eapc-test-payload');
-                        var params = new URLSearchParams();
-
-                        if (!apiUrl || !apiUrl.value.trim()) {
-                            showTestError(card, 'Enter an API URL before testing.');
-                            return;
-                        }
-
-                        params.append('action', 'eapc_test_mapping');
-                        params.append('nonce', testNonce);
-                        params.append('api_url', apiUrl.value);
-                        params.append('format', format ? format.value : 'auto');
-                        params.append('page_id', pageId ? pageId.value : '0');
-                        params.append('mapping_id', mappingId ? mappingId.value : '');
-                        params.append('label', label ? label.value : '');
-                        params.append('cache_ttl', cacheTtl ? cacheTtl.value : '3600');
-                        params.append('headers', requestHeaders ? requestHeaders.value : '');
-                        params.append('bearer_constant', bearerConstant ? bearerConstant.value : '');
-
-                        button.disabled = true;
-                        spinner.classList.add('is-active');
-                        result.hidden = true;
-
-                        fetch(ajaxUrl, {
-                            method: 'POST',
-                            credentials: 'same-origin',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-                            body: params.toString()
-                        })
-                            .then(function(response) { return response.json(); })
-                            .then(function(response) {
-                                if (!response.success) {
-                                    var message = response.data && response.data.message ? response.data.message : 'API test failed.';
-                                    showTestError(card, message);
-                                    return;
-                                }
-
-                                var data = response.data;
-                                var parts = [
-                                    'HTTP ' + data.status,
-                                    data.content_type || 'Content-Type not provided',
-                                    formatBytes(data.bytes || 0)
-                                ];
-                                if (data.resolved_format) {
-                                    parts.push('interpreted as ' + data.resolved_format.toUpperCase());
-                                }
-
-                                result.hidden = false;
-                                result.classList.toggle('eapc-test-result--error', !data.http_ok);
-                                meta.textContent = parts.join(' · ');
-                                payload.value = data.payload || '';
-                            })
-                            .catch(function() {
-                                showTestError(card, 'The API test request could not be completed.');
-                            })
-                            .finally(function() {
-                                button.disabled = false;
-                                spinner.classList.remove('is-active');
-                            });
-                    }
-
-                    function renumber() {
-                        var cards = container.querySelectorAll('.eapc-mapping');
-                        cards.forEach(function(card, index) {
-                            var title = card.querySelector('.eapc-mapping-number');
-                            if (title) {
-                                title.textContent = String(index + 1);
-                            }
-                        });
-                    }
-
-                    addButton.addEventListener('click', function() {
-                        var html = template.innerHTML.replace(/__INDEX__/g, String(nextIndex++));
-                        container.insertAdjacentHTML('beforeend', html);
-                        renumber();
-                    });
-
-                    container.addEventListener('click', function(event) {
-                        if (event.target.classList.contains('eapc-test-mapping')) {
-                            var testCard = event.target.closest('.eapc-mapping');
-                            if (testCard) {
-                                testMapping(testCard, event.target);
-                            }
-                            return;
-                        }
-
-                        if (!event.target.classList.contains('eapc-remove-mapping')) {
-                            return;
-                        }
-                        var card = event.target.closest('.eapc-mapping');
-                        if (card) {
-                            card.remove();
-                            renumber();
-                        }
-                    });
-
-                    renumber();
-                }());
-            </script>
-
             <hr>
-            <h2><?php esc_html_e( 'Cache', 'external-api-page-content' ); ?></h2>
-            <p><?php esc_html_e( 'Clear all current mapping caches and last-known-good API content. The normal WordPress editor content remains untouched and is used when no API content has ever been retrieved successfully.', 'external-api-page-content' ); ?></p>
+            <h2><?php esc_html_e( 'Cache', 'wp-external-api-page-content' ); ?></h2>
+            <p><?php esc_html_e( 'Clear all current mapping caches and last-known-good API content. The normal WordPress editor content remains untouched and is used when no API content has ever been retrieved successfully.', 'wp-external-api-page-content' ); ?></p>
             <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
                 <input type="hidden" name="action" value="eapc_clear_cache">
                 <?php wp_nonce_field( 'eapc_clear_cache' ); ?>
-                <?php submit_button( __( 'Clear external content cache', 'external-api-page-content' ), 'secondary', 'submit', false ); ?>
+                <?php submit_button( __( 'Clear external content cache', 'wp-external-api-page-content' ), 'secondary', 'submit', false ); ?>
             </form>
 
             <hr>
-            <h2><?php esc_html_e( 'Optional Bearer authentication', 'external-api-page-content' ); ?></h2>
-            <p><?php esc_html_e( 'Secrets are not stored in the plugin settings. Define a token as a PHP constant in wp-config.php, then enter that constant name in the relevant mapping. If a mapping has no constant name, EAPC_API_BEARER_TOKEN is used when defined.', 'external-api-page-content' ); ?></p>
+            <h2><?php esc_html_e( 'Optional Bearer authentication', 'wp-external-api-page-content' ); ?></h2>
+            <p><?php esc_html_e( 'Secrets are not stored in the plugin settings. Define a token as a PHP constant in wp-config.php, then enter that constant name in the relevant mapping. If a mapping has no constant name, EAPC_API_BEARER_TOKEN is used when defined.', 'wp-external-api-page-content' ); ?></p>
             <pre><code>define( 'EAPC_API_BEARER_TOKEN', 'global-token' );
 define( 'MY_LEGAL_API_TOKEN', 'mapping-specific-token' );</code></pre>
         </div>
         <?php
+    }
+
+    /**
+     * Renders the page selector for a mapping.
+     *
+     * Kept out of the template so escaping review stays simple: wp_dropdown_pages()
+     * escapes the name/id attributes it generates itself.
+     *
+     * @param string $base      Field name prefix for the settings array.
+     * @param string $id_prefix HTML id prefix.
+     * @param int    $page_id   Currently selected page ID.
+     */
+    private function render_page_dropdown( $base, $id_prefix, $page_id ) {
+        //
+        // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped
+        // wp_dropdown_pages() builds and escapes the select element itself; nothing here is echoed
+        // directly. $base and $id_prefix are internally constructed, $page_id is an integer.
+        wp_dropdown_pages(
+            array(
+                'name'              => $base . '[page_id]',
+                'id'                => $id_prefix . 'page_id',
+                'selected'          => $page_id,
+                'show_option_none'  => __( '— Select a page —', 'wp-external-api-page-content' ),
+                'option_none_value' => '0',
+            )
+        );
+        // phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 
     private function render_mapping_row( $mapping, $index ) {
@@ -990,87 +930,77 @@ define( 'MY_LEGAL_API_TOKEN', 'mapping-specific-token' );</code></pre>
         ?>
         <section class="eapc-mapping">
             <div class="eapc-mapping__header">
-                <h2><?php esc_html_e( 'Mapping', 'external-api-page-content' ); ?> <span class="eapc-mapping-number"></span></h2>
-                <button type="button" class="button-link-delete eapc-remove-mapping"><?php esc_html_e( 'Remove', 'external-api-page-content' ); ?></button>
+                <h2><?php esc_html_e( 'Mapping', 'wp-external-api-page-content' ); ?> <span class="eapc-mapping-number"></span></h2>
+                <button type="button" class="button-link-delete eapc-remove-mapping"><?php esc_html_e( 'Remove', 'wp-external-api-page-content' ); ?></button>
             </div>
 
             <input type="hidden" name="<?php echo esc_attr( $base ); ?>[id]" value="<?php echo esc_attr( $mapping_id ); ?>">
 
             <div class="eapc-mapping__grid">
-                <label for="<?php echo esc_attr( $id_prefix ); ?>label"><?php esc_html_e( 'Label', 'external-api-page-content' ); ?></label>
+                <label for="<?php echo esc_attr( $id_prefix ); ?>label"><?php esc_html_e( 'Label', 'wp-external-api-page-content' ); ?></label>
                 <div>
-                    <input id="<?php echo esc_attr( $id_prefix ); ?>label" name="<?php echo esc_attr( $base ); ?>[label]" type="text" value="<?php echo esc_attr( $label ); ?>" placeholder="<?php echo esc_attr__( 'e.g. Policy page', 'external-api-page-content' ); ?>">
-                    <p class="eapc-mapping__description"><?php esc_html_e( 'Administrative label only; it is not shown on the page.', 'external-api-page-content' ); ?></p>
+                    <input id="<?php echo esc_attr( $id_prefix ); ?>label" name="<?php echo esc_attr( $base ); ?>[label]" type="text" value="<?php echo esc_attr( $label ); ?>" placeholder="<?php echo esc_attr__( 'e.g. Policy page', 'wp-external-api-page-content' ); ?>">
+                    <p class="eapc-mapping__description"><?php esc_html_e( 'Administrative label only; it is not shown on the page.', 'wp-external-api-page-content' ); ?></p>
                 </div>
 
-                <label for="<?php echo esc_attr( $id_prefix ); ?>page_id"><?php esc_html_e( 'WordPress page', 'external-api-page-content' ); ?></label>
+                <label for="<?php echo esc_attr( $id_prefix ); ?>page_id"><?php esc_html_e( 'WordPress page', 'wp-external-api-page-content' ); ?></label>
                 <div>
-                    <?php
-                    wp_dropdown_pages(
-                        array(
-                            'name'              => $base . '[page_id]',
-                            'id'                => $id_prefix . 'page_id',
-                            'selected'          => $page_id,
-                            'show_option_none'  => __( '— Select a page —', 'external-api-page-content' ),
-                            'option_none_value' => '0',
-                        )
-                    );
-                    ?>
+                    <?php $this->render_page_dropdown( $base, $id_prefix, $page_id ); ?>
                 </div>
 
-                <label for="<?php echo esc_attr( $id_prefix ); ?>api_url"><?php esc_html_e( 'API URL', 'external-api-page-content' ); ?></label>
+                <label for="<?php echo esc_attr( $id_prefix ); ?>api_url"><?php esc_html_e( 'API URL', 'wp-external-api-page-content' ); ?></label>
                 <div>
                     <input id="<?php echo esc_attr( $id_prefix ); ?>api_url" name="<?php echo esc_attr( $base ); ?>[api_url]" type="url" class="code" placeholder="https://api.example.com/content/page" value="<?php echo esc_attr( $api_url ); ?>">
                 </div>
 
-                <label for="<?php echo esc_attr( $id_prefix ); ?>headers"><?php esc_html_e( 'Request headers', 'external-api-page-content' ); ?></label>
+                <label for="<?php echo esc_attr( $id_prefix ); ?>headers"><?php esc_html_e( 'Request headers', 'wp-external-api-page-content' ); ?></label>
                 <div>
                     <textarea id="<?php echo esc_attr( $id_prefix ); ?>headers" name="<?php echo esc_attr( $base ); ?>[headers]" class="code eapc-request-headers" rows="5" placeholder="X-API-Key: abc123&#10;X-Tenant: example"><?php echo esc_textarea( $headers ); ?></textarea>
-                    <p class="eapc-mapping__description"><?php esc_html_e( 'Optional. Enter one HTTP header per line as Header-Name: value. These values are stored in the WordPress database. Explicit headers override plugin defaults and the Bearer-token field when names conflict.', 'external-api-page-content' ); ?></p>
+                    <p class="eapc-mapping__description"><?php esc_html_e( 'Optional. Enter one HTTP header per line as Header-Name: value. These values are stored in the WordPress database. Explicit headers override plugin defaults and the Bearer-token field when names conflict.', 'wp-external-api-page-content' ); ?></p>
                 </div>
 
-                <label for="<?php echo esc_attr( $id_prefix ); ?>format"><?php esc_html_e( 'Payload format', 'external-api-page-content' ); ?></label>
+                <label for="<?php echo esc_attr( $id_prefix ); ?>format"><?php esc_html_e( 'Payload format', 'wp-external-api-page-content' ); ?></label>
                 <div>
                     <select id="<?php echo esc_attr( $id_prefix ); ?>format" name="<?php echo esc_attr( $base ); ?>[format]">
-                        <option value="auto" <?php selected( $format, 'auto' ); ?>><?php esc_html_e( 'Auto-detect', 'external-api-page-content' ); ?></option>
-                        <option value="html" <?php selected( $format, 'html' ); ?>><?php esc_html_e( 'HTML', 'external-api-page-content' ); ?></option>
-                        <option value="markdown" <?php selected( $format, 'markdown' ); ?>><?php esc_html_e( 'Markdown', 'external-api-page-content' ); ?></option>
+                        <option value="auto" <?php selected( $format, 'auto' ); ?>><?php esc_html_e( 'Auto-detect', 'wp-external-api-page-content' ); ?></option>
+                        <option value="html" <?php selected( $format, 'html' ); ?>><?php esc_html_e( 'HTML', 'wp-external-api-page-content' ); ?></option>
+                        <option value="markdown" <?php selected( $format, 'markdown' ); ?>><?php esc_html_e( 'Markdown', 'wp-external-api-page-content' ); ?></option>
                     </select>
                 </div>
 
-                <label for="<?php echo esc_attr( $id_prefix ); ?>cache_ttl"><?php esc_html_e( 'Cache TTL (seconds)', 'external-api-page-content' ); ?></label>
+                <label for="<?php echo esc_attr( $id_prefix ); ?>cache_ttl"><?php esc_html_e( 'Cache TTL (seconds)', 'wp-external-api-page-content' ); ?></label>
                 <div>
                     <input id="<?php echo esc_attr( $id_prefix ); ?>cache_ttl" name="<?php echo esc_attr( $base ); ?>[cache_ttl]" type="number" min="0" max="<?php echo esc_attr( WEEK_IN_SECONDS ); ?>" step="1" value="<?php echo esc_attr( $cache_ttl ); ?>" class="small-text">
-                    <p class="eapc-mapping__description"><?php esc_html_e( 'Default: 3600. Use 0 to disable normal caching; last-known-good fallback is still retained.', 'external-api-page-content' ); ?></p>
+                    <p class="eapc-mapping__description"><?php esc_html_e( 'Default: 3600. Use 0 to disable normal caching; last-known-good fallback is still retained.', 'wp-external-api-page-content' ); ?></p>
                 </div>
 
-                <label for="<?php echo esc_attr( $id_prefix ); ?>bearer_constant"><?php esc_html_e( 'Bearer token constant', 'external-api-page-content' ); ?></label>
+                <label for="<?php echo esc_attr( $id_prefix ); ?>bearer_constant"><?php esc_html_e( 'Bearer token constant', 'wp-external-api-page-content' ); ?></label>
                 <div>
                     <input id="<?php echo esc_attr( $id_prefix ); ?>bearer_constant" name="<?php echo esc_attr( $base ); ?>[bearer_constant]" type="text" class="code" value="<?php echo esc_attr( $bearer_name ); ?>" placeholder="MY_API_BEARER_TOKEN">
-                    <p class="eapc-mapping__description"><?php esc_html_e( 'Optional wp-config.php constant name. Leave blank for EAPC_API_BEARER_TOKEN or no authentication.', 'external-api-page-content' ); ?></p>
+                    <p class="eapc-mapping__description"><?php esc_html_e( 'Optional wp-config.php constant name. Leave blank for EAPC_API_BEARER_TOKEN or no authentication.', 'wp-external-api-page-content' ); ?></p>
                 </div>
 
-                <span><?php esc_html_e( 'Status', 'external-api-page-content' ); ?></span>
+                <span><?php esc_html_e( 'Status', 'wp-external-api-page-content' ); ?></span>
                 <div>
                     <input type="hidden" name="<?php echo esc_attr( $base ); ?>[enabled]" value="0">
                     <label>
                         <input name="<?php echo esc_attr( $base ); ?>[enabled]" type="checkbox" value="1" <?php checked( $enabled ); ?>>
-                        <?php esc_html_e( 'Enabled', 'external-api-page-content' ); ?>
+                        <?php esc_html_e( 'Enabled', 'wp-external-api-page-content' ); ?>
                     </label>
                 </div>
 
-                <span><?php esc_html_e( 'API test', 'external-api-page-content' ); ?></span>
+                <span><?php esc_html_e( 'API test', 'wp-external-api-page-content' ); ?></span>
                 <div>
                     <div class="eapc-test-controls">
-                        <button type="button" class="button eapc-test-mapping"><?php esc_html_e( 'Test API', 'external-api-page-content' ); ?></button>
+                        <button type="button" class="button eapc-test-mapping"><?php esc_html_e( 'Test API', 'wp-external-api-page-content' ); ?></button>
                         <span class="spinner eapc-test-spinner" aria-hidden="true"></span>
                     </div>
-                    <p class="eapc-mapping__description"><?php esc_html_e( 'Fetches the endpoint using the values currently shown above. It does not save settings or update the content cache.', 'external-api-page-content' ); ?></p>
+                    <p class="eapc-mapping__description"><?php esc_html_e( 'Fetches the endpoint using the values currently shown above. It does not save settings or update the content cache.', 'wp-external-api-page-content' ); ?></p>
                 </div>
 
                 <div class="eapc-test-result" hidden>
                     <p class="eapc-test-result__meta"></p>
-                    <label class="screen-reader-text" for="<?php echo esc_attr( $id_prefix ); ?>test_payload"><?php esc_html_e( 'Raw API response payload', 'external-api-page-content' ); ?></label>
+                    <label class="screen-reader-text" for="<?php echo esc_attr( $id_prefix ); ?>test_payload"><?php esc_html_e( 'Raw API response payload', 'wp-external-api-page-content' ); ?></label>
                     <textarea id="<?php echo esc_attr( $id_prefix ); ?>test_payload" class="large-text code eapc-test-payload" rows="14" readonly></textarea>
                 </div>
             </div>

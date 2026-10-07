@@ -1,93 +1,97 @@
-# WP External API Page Content
+# External API Page Content
 
+Replace the body of selected WordPress pages with raw HTML or Markdown fetched from an external HTTP API.
 
+[![License: GPL v2 or later](https://img.shields.io/badge/license-GPLv2%2B-blue.svg)](LICENSE)
 
-## Getting started
+## What it does
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+A site editor picks a WordPress page, points it at an API endpoint, and the plugin swaps that page's
+body for whatever the endpoint returns. The original editor content is never overwritten: it stays in
+place as a fallback if the API has never returned a usable response.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+Any number of independent page-to-API mappings can be configured. No page purpose or endpoint is
+hard-coded.
 
-## Add your files
+## Features
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+- Repeatable page-to-API mappings with an optional administrative label.
+- Payload format per mapping: auto-detect, HTML or Markdown.
+- Per-mapping cache TTL, plus a last-known-good fallback for outages.
+- Per-mapping HTTP request headers (`Header-Name: value`, one per line).
+- Bearer authentication through `wp-config.php` constants, so tokens never reach the database.
+- Test API button that reports status, Content-Type, size and detected format without touching the cache.
+- Filters for request arguments, the KSES allow-list and the final rendered HTML.
+- Uninstall routine that removes every option and transient the plugin created.
 
-```
-cd existing_repo
-git remote add origin https://gitlab.deep9.se/wp-plugins/wp-external-api-page-content.git
-git branch -M main
-git push -uf origin main
-```
+## Requirements
 
-## Integrate with your tools
-
-* [Set up project integrations](https://gitlab.deep9.se/wp-plugins/wp-external-api-page-content/-/settings/integrations)
-
-## Collaborate with your team
-
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- WordPress 5.8 or newer
+- PHP 7.4 or newer
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Install through **Plugins → Add New** on your site, or download the release zip and upload it with
+**Plugins → Add New → Upload Plugin**.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+Then open **Settings → External API Content**, add a mapping, choose a page and enter the endpoint URL.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## Security notes
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+- Endpoints must be public HTTP/HTTPS URLs and are always fetched with `wp_safe_remote_get()`.
+- HTML responses are sanitized with the WordPress KSES rules for post content.
+- Markdown is rendered and then sanitized before display.
+- Request headers typed into the settings screen live in the options table — use `wp-config.php`
+  constants for anything secret.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## Filters
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+| Filter | Purpose |
+| --- | --- |
+| `eapc_should_replace_content` | Override the decision to replace a page body. |
+| `eapc_request_args` | Change the HTTP request arguments before a fetch. |
+| `eapc_allowed_html` | Change the KSES allow-list used for HTML responses. |
+| `eapc_markdown_html` | Change the HTML produced from Markdown. |
+| `eapc_rendered_content` | Change the final HTML before it is cached and output. |
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+## Development
+
+This repository is a public mirror of the canonical GitLab repository. The distributed plugin
+contains the same unminified source as this repository, so no build step is required to review it.
+
+A local WordPress environment is available through [`@wordpress/env`](https://developer.wordpress.org/block-editor/getting-started/devenv/get-started-with-wp-env/)
+and needs Docker plus Node.js:
+
+```sh
+npx @wordpress/env start
+```
+
+`wp-env` starts WordPress, MariaDB and a WP-CLI container. The plugin directory is mounted into the
+container, so edits are picked up immediately.
+
+### Linting
+
+```sh
+phpcs          # uses phpcs.xml.dist (WordPress + plugin text domain rules)
+```
+
+### Building a release zip
+
+```sh
+bin/build-zip.sh
+```
+
+The script reads the version from the plugin header, honours `.distignore`, and writes
+`build/wp-external-api-page-content-<version>.zip` containing a single top-level plugin folder —
+exactly the layout WordPress.org expects.
+
+## Releasing
+
+1. Bump `Version:` in `wp-external-api-page-content.php`.
+2. Update `Stable tag:` and the changelog in `readme.txt`.
+3. Commit and tag the release.
+4. Run `bin/build-zip.sh` and upload the zip.
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Released under the [GPLv2 or later](LICENSE).

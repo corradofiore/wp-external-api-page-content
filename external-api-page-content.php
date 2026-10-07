@@ -4,7 +4,7 @@
  * Plugin URI: https://github.com/corradofiore/wp-external-api-page-content
  * Description: Replaces the body of configured WordPress pages with raw HTML or Markdown retrieved from external HTTP APIs.
  * Version: 1.3.0
- * Requires at least: 5.8
+ * Requires at least: 6.8
  * Requires PHP: 8.3
  * Author: Corrado Fiore
  * Author URI: https://corradofiore.it

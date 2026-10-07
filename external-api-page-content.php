@@ -5,7 +5,7 @@
  * Description: Replaces the body of configured WordPress pages with raw HTML or Markdown retrieved from external HTTP APIs.
  * Version: 1.3.0
  * Requires at least: 5.8
- * Requires PHP: 7.4
+ * Requires PHP: 8.3
  * Author: Corrado Fiore
  * Author URI: https://corradofiore.it
  * License: GPLv2 or later

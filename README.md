@@ -27,7 +27,7 @@ hard-coded.
 ## Requirements
 
 - WordPress 5.8 or newer
-- PHP 7.4 or newer
+- PHP 8.3 or newer
 
 ## Installation
 

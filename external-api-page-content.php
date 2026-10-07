@@ -32,6 +32,16 @@ final class EAPC_Plugin {
 
     private static $instance = null;
 
+    /**
+     * Hook suffix of the settings screen, captured from add_menu_page().
+     *
+     * Comparing against this rather than a guessed "toplevel_page_..."
+     * string keeps the asset enqueue correct if the menu slug ever changes.
+     *
+     * @var string
+     */
+    private $settings_hook = '';
+
     public static function instance() {
         if ( null === self::$instance ) {
             self::$instance = new self();
@@ -66,13 +76,13 @@ final class EAPC_Plugin {
     }
 
     public function add_settings_link( $links ) {
-        $url = admin_url( 'options-general.php?page=' . self::SETTINGS_PAGE );
+        $url = admin_url( 'admin.php?page=' . self::SETTINGS_PAGE );
         array_unshift( $links, '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'external-api-page-content' ) . '</a>' );
         return $links;
     }
 
     public function enqueue_admin_assets( $hook_suffix ) {
-        if ( 'settings_page_' . self::SETTINGS_PAGE !== $hook_suffix ) {
+        if ( $this->settings_hook !== $hook_suffix ) {
             return;
         }
 
@@ -102,12 +112,13 @@ final class EAPC_Plugin {
     }
 
     public function register_settings_page() {
-        add_options_page(
+        $this->settings_hook = add_menu_page(
             __( 'External API Page Content', 'external-api-page-content' ),
             __( 'External API Content', 'external-api-page-content' ),
             'manage_options',
             self::SETTINGS_PAGE,
-            array( $this, 'render_settings_page' )
+            array( $this, 'render_settings_page' ),
+            'dashicons-rest-api'
         );
     }
 
@@ -812,7 +823,7 @@ final class EAPC_Plugin {
                     'page'               => self::SETTINGS_PAGE,
                     'eapc_cache_cleared' => '1',
                 ),
-                admin_url( 'options-general.php' )
+                admin_url( 'admin.php' )
             )
         );
         exit;
@@ -828,6 +839,28 @@ final class EAPC_Plugin {
         ?>
         <div class="wrap">
             <h1><?php esc_html_e( 'External API Page Content', 'external-api-page-content' ); ?></h1>
+
+            <?php
+            /*
+             * Notices are normally printed by wp-admin/options-head.php, which WordPress only
+             * loads when the parent file is options-general.php. This screen sits in its own
+             * top-level menu, so the messages registered by sanitize_settings() have to be
+             * printed here instead. Reading the errors first also tells us whether the save
+             * that just happened succeeded.
+             */
+            $eapc_notices = get_settings_errors();
+
+            if ( isset( $_GET['settings-updated'] ) && empty( $eapc_notices ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+                add_settings_error(
+                    self::OPTION_SETTINGS,
+                    'settings_updated',
+                    __( 'Settings saved.', 'external-api-page-content' ),
+                    'success'
+                );
+            }
+
+            settings_errors();
+            ?>
 
             <?php if ( isset( $_GET['eapc_cache_cleared'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
                 <div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'External content cache cleared.', 'external-api-page-content' ); ?></p></div>

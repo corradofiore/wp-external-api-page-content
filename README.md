@@ -34,7 +34,7 @@ hard-coded.
 Install through **Plugins → Add New** on your site, or download the release zip and upload it with
 **Plugins → Add New → Upload Plugin**.
 
-Then open **Settings → External API Content**, add a mapping, choose a page and enter the endpoint URL.
+Then open **External API Content** in the admin menu, add a mapping, choose a page and enter the endpoint URL.
 
 ## Security notes
 

@@ -44,7 +44,7 @@ Features:
 == Installation ==
 
 1. Upload and activate the plugin.
-2. Go to Settings -> External API Content.
+2. Go to External API Content in the admin menu.
 3. Click Add mapping.
 4. Select a WordPress page and enter its API URL.
 5. Choose Auto-detect, HTML, or Markdown.
@@ -169,7 +169,7 @@ Headings, paragraphs, blockquotes, horizontal rules, fenced code blocks, ordered
 
 = Does it work on multisite? =
 
-Settings are stored per site. After a network activation, configure each site through Settings -> External API Content.
+Settings are stored per site. After a network activation, configure each site through the External API Content screen.
 
 == External requests and privacy ==
 

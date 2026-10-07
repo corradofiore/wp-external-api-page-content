@@ -96,12 +96,12 @@ bin/build-zip.sh
 ```
 
 The script reads the version from the plugin header, honours `.distignore`, and writes
-`build/wp-external-api-page-content-<version>.zip` containing a single top-level plugin folder —
+`build/external-api-page-content-<version>.zip` containing a single top-level plugin folder —
 exactly the layout WordPress.org expects.
 
 ## Releasing
 
-1. Bump `Version:` in `wp-external-api-page-content.php`.
+1. Bump `Version:` in `external-api-page-content.php`.
 2. Update `Stable tag:` and the changelog in `readme.txt`.
 3. Commit and tag the release.
 4. Run `bin/build-zip.sh` and upload the zip.

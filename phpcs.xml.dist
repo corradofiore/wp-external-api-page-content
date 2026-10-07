@@ -18,7 +18,7 @@
 
 	<rule ref="WordPress.WP.I18n">
 		<properties>
-			<property name="text_domain" type="array" value="wp-external-api-page-content"/>
+			<property name="text_domain" type="array" value="external-api-page-content"/>
 		</properties>
 	</rule>
 

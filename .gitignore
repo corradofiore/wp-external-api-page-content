@@ -3,6 +3,9 @@
 # Development tooling (per-developer, contains machine-specific details)
 .vscode/
 
+# Local wp-env overrides (site URL and ports for this machine)
+.wp-env.override.json
+
 # Build output
 /build/
 

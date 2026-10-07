@@ -7,8 +7,6 @@
   "testsEnvironment": false,
   "config": {
     "WP_DEBUG": true,
-    "WP_DEBUG_LOG": true,
-    "WP_SITEURL": "http://localhost:8894",
-    "WP_HOME": "http://localhost:8894"
+    "WP_DEBUG_LOG": true
   }
 }

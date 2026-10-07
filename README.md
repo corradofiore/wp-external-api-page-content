@@ -69,6 +69,20 @@ npx @wordpress/env start
 `wp-env` starts WordPress, MariaDB and a WP-CLI container. The plugin directory is mounted into the
 container, so edits are picked up immediately.
 
+Environment-specific values — such as a site URL or database port other than `localhost`, or when
+WordPress runs on a remote Docker host — belong in a git-ignored `.wp-env.override.json`. wp-env
+merges the `config` keys of the override over `.wp-env.json`, so the committed base configuration
+stays portable:
+
+```json
+{
+  "config": {
+    "WP_SITEURL": "http://192.168.1.50:8894",
+    "WP_HOME": "http://192.168.1.50:8894"
+  }
+}
+```
+
 ### Linting
 
 ```sh

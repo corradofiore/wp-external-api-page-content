@@ -39,7 +39,7 @@ tar -cf - -C "$PARENT" \
 	--exclude="$SLUG/build" \
 	--exclude="$SLUG/node_modules" \
 	--exclude="$SLUG/vendor" \
-	--exclude="$SLUG/.wp-env.json" \
+	--exclude="$SLUG/.wp-env*.json" \
 	--exclude="$SLUG/.gitignore" \
 	--exclude="$SLUG/.distignore" \
 	--exclude="$SLUG/.editorconfig" \

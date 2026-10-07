@@ -7,6 +7,7 @@
 /.editorconfig
 /.vscode
 /.wp-env.json
+/.wp-env.override.json
 /.DS_Store
 /phpcs.xml.dist
 /composer.json

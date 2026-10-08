@@ -57,6 +57,10 @@ Repeat for as many pages as required.
 
 The original content stored in each WordPress page is not overwritten. It acts as an emergency fallback.
 
+== Screenshots ==
+
+1. The settings screen. Every mapping is configured independently: label, WordPress page, API endpoint, payload format, cache lifetime, request headers and optional Bearer authentication.
+
 == Upgrading from 1.0 ==
 
 Version 1.1 automatically converts the old fixed-slot settings into ordinary mappings. After migration there is no special handling for any page purpose.

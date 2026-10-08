@@ -31,6 +31,10 @@ WordPress.org maps the file names to positions on the plugin page; the names are
 - Icons derived from `~/Downloads/document-and-plug-icon.png` (1254×1254).
 - Banners derived from `~/Downloads/document-to-website-data-flow.png` (2172×724), cropped
   from 724 to 703 px tall so the 3.09:1 banner ratio is matched without distortion.
+- `screenshot-1.png` derived from `~/Downloads/api-plugin-screenshot.png` (1112×967): a browser
+  capture of the settings screen showing placeholder values only, so it contains no site URL,
+  endpoint or credential. It documents the 1.3.0 field set; re-shoot after adding the
+  Shortcode ID and delivery-mode fields.
 
 ## Regenerating
 

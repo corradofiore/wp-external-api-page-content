@@ -8,7 +8,7 @@ which sits beside `trunk/` and `tags/` — not inside `trunk/`. Upload them ther
 plugin directory picks them up within a few minutes.
 
 ```
-plugins.svn.wordpress.org/external-api-page-content/
+plugins.svn.wordpress.org/hivekit-external-api-page-content/
 ├── assets/          <- these files go here
 ├── tags/
 └── trunk/

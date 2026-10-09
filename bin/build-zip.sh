@@ -11,7 +11,7 @@ set -euo pipefail
 
 # The WordPress.org slug. It is derived from the Plugin Name header and becomes
 # the plugin folder name on installed sites, so the archive root must use it.
-SLUG="external-api-page-content"
+SLUG="hivekit-external-api-page-content"
 
 # The working directory keeps its own name (it is also the Git repository name).
 SRC_DIR="$(basename "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)")"

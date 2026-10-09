@@ -1,19 +1,19 @@
 /**
- * External API Page Content - settings screen behaviour.
+ * HiveKit External API Page Content - settings screen behaviour.
  *
- * @package External_API_Page_Content
+ * @package HiveKit_EAPC
  */
 
 ( function () {
 	'use strict';
 
-	var config = window.eapcAdmin || {};
+	var config = window.hivekitEapcAdmin || {};
 	var i18n = config.i18n || {};
 
 	function init() {
-		var container = document.getElementById( 'eapc-mappings' );
-		var addButton = document.getElementById( 'eapc-add-mapping' );
-		var template = document.getElementById( 'eapc-mapping-template' );
+		var container = document.getElementById( 'hivekit-eapc-mappings' );
+		var addButton = document.getElementById( 'hivekit-eapc-add-mapping' );
+		var template = document.getElementById( 'hivekit-eapc-mapping-template' );
 
 		if ( ! container || ! addButton || ! template ) {
 			return;
@@ -38,12 +38,12 @@
 		}
 
 		function showTestError( card, message ) {
-			var result = card.querySelector( '.eapc-test-result' );
-			var meta = card.querySelector( '.eapc-test-result__meta' );
-			var payload = card.querySelector( '.eapc-test-payload' );
+			var result = card.querySelector( '.hivekit-eapc-test-result' );
+			var meta = card.querySelector( '.hivekit-eapc-test-result__meta' );
+			var payload = card.querySelector( '.hivekit-eapc-test-payload' );
 
 			result.hidden = false;
-			result.classList.add( 'eapc-test-result--error' );
+			result.classList.add( 'hivekit-eapc-test-result--error' );
 			meta.textContent = message;
 			payload.value = '';
 		}
@@ -57,10 +57,10 @@
 			var cacheTtl = mappingField( card, 'cache_ttl' );
 			var requestHeaders = mappingField( card, 'headers' );
 			var bearerConstant = mappingField( card, 'bearer_constant' );
-			var spinner = card.querySelector( '.eapc-test-spinner' );
-			var result = card.querySelector( '.eapc-test-result' );
-			var meta = card.querySelector( '.eapc-test-result__meta' );
-			var payload = card.querySelector( '.eapc-test-payload' );
+			var spinner = card.querySelector( '.hivekit-eapc-test-spinner' );
+			var result = card.querySelector( '.hivekit-eapc-test-result' );
+			var meta = card.querySelector( '.hivekit-eapc-test-result__meta' );
+			var payload = card.querySelector( '.hivekit-eapc-test-payload' );
 			var params = new URLSearchParams();
 
 			if ( ! apiUrl || ! apiUrl.value.trim() ) {
@@ -68,7 +68,7 @@
 				return;
 			}
 
-			params.append( 'action', 'eapc_test_mapping' );
+			params.append( 'action', 'hivekit_eapc_test_mapping' );
 			params.append( 'nonce', testNonce );
 			params.append( 'api_url', apiUrl.value );
 			params.append( 'format', format ? format.value : 'auto' );
@@ -115,7 +115,7 @@
 					}
 
 					result.hidden = false;
-					result.classList.toggle( 'eapc-test-result--error', ! data.http_ok );
+					result.classList.toggle( 'hivekit-eapc-test-result--error', ! data.http_ok );
 					meta.textContent = parts.join( ' \u00b7 ' );
 					payload.value = data.payload || '';
 				} )
@@ -129,10 +129,10 @@
 		}
 
 		function renumber() {
-			var cards = container.querySelectorAll( '.eapc-mapping' );
+			var cards = container.querySelectorAll( '.hivekit-eapc-mapping' );
 
 			cards.forEach( function ( card, index ) {
-				var title = card.querySelector( '.eapc-mapping-number' );
+				var title = card.querySelector( '.hivekit-eapc-mapping-number' );
 
 				if ( title ) {
 					title.textContent = String( index + 1 );
@@ -148,8 +148,8 @@
 		} );
 
 		container.addEventListener( 'click', function ( event ) {
-			if ( event.target.classList.contains( 'eapc-test-mapping' ) ) {
-				var testCard = event.target.closest( '.eapc-mapping' );
+			if ( event.target.classList.contains( 'hivekit-eapc-test-mapping' ) ) {
+				var testCard = event.target.closest( '.hivekit-eapc-mapping' );
 
 				if ( testCard ) {
 					testMapping( testCard, event.target );
@@ -158,11 +158,11 @@
 				return;
 			}
 
-			if ( ! event.target.classList.contains( 'eapc-remove-mapping' ) ) {
+			if ( ! event.target.classList.contains( 'hivekit-eapc-remove-mapping' ) ) {
 				return;
 			}
 
-			var card = event.target.closest( '.eapc-mapping' );
+			var card = event.target.closest( '.hivekit-eapc-mapping' );
 
 			if ( card ) {
 				card.remove();

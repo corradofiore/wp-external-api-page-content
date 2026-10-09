@@ -1,4 +1,4 @@
-# External API Page Content
+# HiveKit External API Page Content
 
 Replace the body of selected WordPress pages with raw HTML or Markdown fetched from an external HTTP API.
 
@@ -48,11 +48,11 @@ Then open **External API Content** in the admin menu, add a mapping, choose a pa
 
 | Filter | Purpose |
 | --- | --- |
-| `eapc_should_replace_content` | Override the decision to replace a page body. |
-| `eapc_request_args` | Change the HTTP request arguments before a fetch. |
-| `eapc_allowed_html` | Change the KSES allow-list used for HTML responses. |
-| `eapc_markdown_html` | Change the HTML produced from Markdown. |
-| `eapc_rendered_content` | Change the final HTML before it is cached and output. |
+| `hivekit_eapc_should_replace_content` | Override the decision to replace a page body. |
+| `hivekit_eapc_request_args` | Change the HTTP request arguments before a fetch. |
+| `hivekit_eapc_allowed_html` | Change the KSES allow-list used for HTML responses. |
+| `hivekit_eapc_markdown_html` | Change the HTML produced from Markdown. |
+| `hivekit_eapc_rendered_content` | Change the final HTML before it is cached and output. |
 
 ## Development
 
@@ -96,12 +96,12 @@ bin/build-zip.sh
 ```
 
 The script reads the version from the plugin header, honours `.distignore`, and writes
-`build/external-api-page-content-<version>.zip` containing a single top-level plugin folder —
+`build/hivekit-external-api-page-content-<version>.zip` containing a single top-level plugin folder —
 exactly the layout WordPress.org expects.
 
 ## Releasing
 
-1. Bump `Version:` in `external-api-page-content.php`.
+1. Bump `Version:` in `hivekit-external-api-page-content.php`.
 2. Update `Stable tag:` and the changelog in `readme.txt`.
 3. Commit and tag the release.
 4. Run `bin/build-zip.sh` and upload the zip.

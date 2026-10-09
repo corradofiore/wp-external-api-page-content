@@ -1,4 +1,4 @@
-=== External API Page Content ===
+=== HiveKit External API Page Content ===
 Contributors: corradofiore
 Tags: api, markdown, html, content, remote
 Requires at least: 6.8
@@ -85,7 +85,7 @@ The Test API button uses the request headers currently entered in the mapping, i
 
 For one Bearer token shared by mappings that do not specify their own constant, add this to `wp-config.php`:
 
-`define( 'EAPC_API_BEARER_TOKEN', 'your-token' );`
+`define( 'HIVEKIT_EAPC_API_BEARER_TOKEN', 'your-token' );`
 
 For a mapping-specific token, define any PHP constant you choose:
 
@@ -95,11 +95,11 @@ Then enter `MY_LEGAL_API_TOKEN` in that mapping's Bearer token constant field.
 
 If a mapping specifies a constant name and that constant is not defined, no Authorization header is sent for that mapping.
 
-For other authentication mechanisms, use the `eapc_request_args` filter from a small site-specific plugin or theme.
+For other authentication mechanisms, use the `hivekit_eapc_request_args` filter from a small site-specific plugin or theme.
 
 Example for an API key header:
 
-    add_filter( 'eapc_request_args', function( $args, $url, $page_id, $mapping_id, $mapping ) {
+    add_filter( 'hivekit_eapc_request_args', function( $args, $url, $page_id, $mapping_id, $mapping ) {
         if ( 'Policy API' === $mapping['label'] ) {
             $args['headers']['X-API-Key'] = 'replace-me';
         }
@@ -114,7 +114,7 @@ Example for an API key header:
 * Script tags and other unsafe HTML are removed by default.
 * Bearer-token values are not stored by the plugin; only optional constant names are stored.
 
-If you intentionally need additional HTML tags/attributes, use the `eapc_allowed_html` filter.
+If you intentionally need additional HTML tags/attributes, use the `hivekit_eapc_allowed_html` filter.
 
 == Markdown support ==
 
@@ -130,23 +130,23 @@ The bundled dependency-free Markdown renderer is intentionally small and support
 * inline code
 * bold, emphasis, and strikethrough
 
-It is not a full CommonMark implementation. If your source documents depend on advanced Markdown features such as tables, nested lists, footnotes, or reference-style links, replace/extend the renderer through the `eapc_markdown_html` filter or integrate a full Markdown parser.
+It is not a full CommonMark implementation. If your source documents depend on advanced Markdown features such as tables, nested lists, footnotes, or reference-style links, replace/extend the renderer through the `hivekit_eapc_markdown_html` filter or integrate a full Markdown parser.
 
 == Filters ==
 
-`eapc_should_replace_content`
+`hivekit_eapc_should_replace_content`
 Controls whether content replacement occurs. Receives the page ID and full mapping.
 
-`eapc_request_args`
+`hivekit_eapc_request_args`
 Changes WordPress HTTP request arguments before the API request. Receives URL, page ID, stable mapping ID, and full mapping.
 
-`eapc_allowed_html`
+`hivekit_eapc_allowed_html`
 Changes the WordPress KSES allowlist for HTML responses.
 
-`eapc_markdown_html`
+`hivekit_eapc_markdown_html`
 Changes rendered/sanitized Markdown HTML.
 
-`eapc_rendered_content`
+`hivekit_eapc_rendered_content`
 Changes the final HTML before caching/output. Receives the stable mapping ID and full mapping.
 
 == Frequently Asked Questions ==
@@ -192,6 +192,7 @@ Bug reports and feature requests are welcome there. The distributed plugin conta
 == Changelog ==
 
 = 1.3.0 =
+* Renamed the plugin to HiveKit External API Page Content. Every option, hook, filter and constant now uses the `hivekit_eapc_` prefix, and settings saved by earlier versions are migrated automatically.
 * Added per-mapping HTTP request headers textarea.
 * Headers use one `Header-Name: value` entry per line and apply to both live fetches and Test API requests.
 * Explicit mapping headers override default headers and Bearer authentication when names conflict.

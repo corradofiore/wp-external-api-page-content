@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-final class EAPC_Markdown {
+final class HiveKit_EAPC_Markdown {
     public static function render( $markdown ) {
         $markdown = str_replace( array( "\r\n", "\r" ), "\n", (string) $markdown );
         $lines    = explode( "\n", $markdown );
@@ -141,7 +141,7 @@ final class EAPC_Markdown {
         $text = preg_replace_callback(
             '/`([^`]+)`/',
             function ( $m ) use ( &$tokens ) {
-                $token = 'EAPCTOKEN' . count( $tokens ) . 'PLACEHOLDER';
+                $token = 'HIVEKIT_EAPCTOKEN' . count( $tokens ) . 'PLACEHOLDER';
                 $tokens[ $token ] = '<code>' . esc_html( $m[1] ) . '</code>';
                 return $token;
             },
@@ -151,7 +151,7 @@ final class EAPC_Markdown {
         $text = preg_replace_callback(
             '/\[([^\]]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)/i',
             function ( $m ) use ( &$tokens ) {
-                $token = 'EAPCTOKEN' . count( $tokens ) . 'PLACEHOLDER';
+                $token = 'HIVEKIT_EAPCTOKEN' . count( $tokens ) . 'PLACEHOLDER';
                 $href  = esc_url( $m[2], array( 'http', 'https', 'mailto' ) );
                 if ( '' === $href ) {
                     $tokens[ $token ] = esc_html( $m[1] );

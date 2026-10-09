@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="External API Page Content">
-	<description>Coding standards for the External API Page Content plugin.</description>
+<ruleset name="HiveKit External API Page Content">
+	<description>Coding standards for the HiveKit External API Page Content plugin.</description>
 
 	<file>.</file>
 
@@ -18,13 +18,13 @@
 
 	<rule ref="WordPress.WP.I18n">
 		<properties>
-			<property name="text_domain" type="array" value="external-api-page-content"/>
+			<property name="text_domain" type="array" value="hivekit-external-api-page-content"/>
 		</properties>
 	</rule>
 
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
-			<property name="prefixes" type="array" value="eapc,EAPC"/>
+			<property name="prefixes" type="array" value="hivekit_eapc,HIVEKIT_EAPC,HiveKit_EAPC"/>
 		</properties>
 	</rule>
 

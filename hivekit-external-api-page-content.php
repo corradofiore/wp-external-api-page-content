@@ -120,8 +120,8 @@ final class HiveKit_EAPC_Plugin {
 
     public function register_settings_page() {
         $this->settings_hook = add_menu_page(
-            __( 'External API Page Content', 'hivekit-external-api-page-content' ),
-            __( 'External API Content', 'hivekit-external-api-page-content' ),
+            __( 'HiveKit External API Page Content', 'hivekit-external-api-page-content' ),
+            __( 'HiveKit External API', 'hivekit-external-api-page-content' ),
             'manage_options',
             self::SETTINGS_PAGE,
             array( $this, 'render_settings_page' ),
@@ -734,7 +734,7 @@ final class HiveKit_EAPC_Plugin {
             // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only diagnostics, gated by WP_DEBUG.
             error_log(
                 sprintf(
-                    '[External API Page Content] page=%d mapping=%s url=%s error=%s',
+                    '[HiveKit External API Page Content] page=%d mapping=%s url=%s error=%s',
                     $page_id,
                     isset( $mapping['id'] ) ? $mapping['id'] : '',
                     isset( $mapping['api_url'] ) ? $mapping['api_url'] : '',
@@ -891,7 +891,7 @@ final class HiveKit_EAPC_Plugin {
         $mappings = $settings['mappings'];
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e( 'External API Page Content', 'hivekit-external-api-page-content' ); ?></h1>
+            <h1><?php esc_html_e( 'HiveKit External API Page Content', 'hivekit-external-api-page-content' ); ?></h1>
 
             <?php
             /*
